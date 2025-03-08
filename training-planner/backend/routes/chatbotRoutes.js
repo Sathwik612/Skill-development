@@ -14,12 +14,12 @@ if (!API_KEY) {
   process.exit(1);
 }
 
-// Chat history
+// Chat history (static, in-memory)
 const chatHistory = [
   {
     role: "system",
     content:
-      "You are a sports coach assistant. Your role is to generate personalized training plans and provide performance feedback for team members based on their needs, progress, and goals. Ask questions if more information is needed.",
+     "You are an expert AI assistant specializing in coaching strategies and player development. Your role is to assist a football coach in analyzing players' performance, identifying strengths and weaknesses, and providing personalized training drills, tactical improvements, and skill enhancement strategies. Offer data-driven insights and ask relevant questions to refine your recommendations. Your responses should focus on improving team performance, player growth, and match tactics based on the coach's specific concerns., Remeber that all of them are plhysicallya ctive as they are sports persons. Dont ask that question.Also when asked about his team preformance ffedback , tell the coach to proved some insights about their last game performance.  "
   },
 ];
 
@@ -51,12 +51,14 @@ router.post("/", async (req, res) => {
       }
     );
 
-    const reply = response.data?.choices?.[0]?.message?.content || "No response from chatbot.";
+    const reply =
+      response.data?.choices?.[0]?.message?.content ||
+      "No response from chatbot.";
 
     // Add chatbot response to history
     chatHistory.push({ role: "assistant", content: reply });
 
-    res.json({ message: reply });
+    res.json({ reply });
   } catch (error) {
     console.error("Chatbot API error:", error.message);
     res.status(500).json({ error: "Chatbot request failed" });

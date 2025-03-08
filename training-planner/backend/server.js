@@ -5,6 +5,7 @@ import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import playerRoutes from "./routes/playerRoutes.js";
 import coachRoutes from "./routes/coachRoutes.js";
+import chatbotRoutes from "./routes/chatbotRoutes.js"; // New Chatbot Route
 import Coach from "./models/Coach.js";
 import Player from "./models/Player.js";
 import bcrypt from "bcryptjs";
@@ -16,8 +17,8 @@ app.use(express.json());
 
 // ✅ Configure CORS Properly
 const corsOptions = {
-  origin: "http://localhost:3000",
-  credentials: true,
+  origin: "http://localhost:3000", // Allow frontend to access backend
+  credentials: true,               // Allow authentication headers & cookies
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
 };
 app.use(cors(corsOptions));
@@ -70,23 +71,23 @@ insertStaticData();
 app.use("/api/auth", authRoutes);
 app.use("/api/players", playerRoutes);
 app.use("/api/coaches", coachRoutes);
+app.use("/api/chatbot", chatbotRoutes); // Chatbot endpoint (does not require playerId)
 
+// Root Endpoint
 app.get("/", (req, res) => res.send("API is running..."));
 
-// ✅ GameSensei AI Chatbot API
-app.post("/api/chatbot", async (req, res) => {
+// ✅ API to Update Player Tactics
+app.post("/api/update-tactics", async (req, res) => {
   try {
-    const { message, playerId } = req.body;
-    if (!message || !playerId) return res.status(400).json({ error: "Message and Player ID are required" });
-
-    const response = await axios.post("http://localhost:5001/api/chatbot", { message });
-    const aiReply = response.data.reply;
-
-    await Player.findByIdAndUpdate(playerId, { $push: { aiInsights: aiReply } });
-    res.json({ reply: aiReply });
+    const { playerId, newTactics } = req.body;
+    if (!playerId || !newTactics) {
+      return res.status(400).json({ error: "Player ID and new tactics are required" });
+    }
+    await Player.findByIdAndUpdate(playerId, { tactics: newTactics });
+    res.json({ message: "Tactics updated successfully" });
   } catch (error) {
-    console.error("❌ AI Chatbot Error:", error);
-    res.status(500).json({ error: "Failed to process AI response" });
+    console.error("❌ Error updating tactics:", error);
+    res.status(500).json({ error: "Failed to update tactics" });
   }
 });
 
